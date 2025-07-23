@@ -35,40 +35,44 @@ export function SeccionPlaylistsDestacadas() {
       const token = await obtenerTokenPublico()
       const spotify = new SpotifyService(token)
       
-      let data
+      let query = ''
       switch(categoria) {
         case 'viral':
-          data = await spotify.buscar({
-            q: 'viral hits 2024',
-            type: ['playlist'],
-            limit: 8
-          })
-          if (data.playlists?.items) {
-            setPlaylists(data.playlists.items)
-          }
+          query = 'viral hits 2024 playlist'
           break
         case 'top':
-          data = await spotify.buscar({
-            q: 'top 50',
-            type: ['playlist'],
-            limit: 8
-          })
-          if (data.playlists?.items) {
-            setPlaylists(data.playlists.items)
-          }
+          query = 'top 50 españa'
           break
         default:
-          data = await spotify.obtenerPlaylistsDestacadas({
-            country: 'ES',
-            limit: 8
-          })
-          if (data.playlists?.items) {
-            setPlaylists(data.playlists.items)
-          }
+          query = 'éxitos 2024 playlist españa'
+      }
+      
+      // Siempre usar búsqueda que sabemos que funciona
+      const data = await spotify.buscar({
+        q: query,
+        type: ['playlist'],
+        limit: 8,
+        market: 'ES'
+      })
+      
+      if (data.playlists?.items && data.playlists.items.length > 0) {
+        setPlaylists(data.playlists.items)
+      } else {
+        // Si no hay resultados, buscar algo más general
+        const fallbackData = await spotify.buscar({
+          q: 'top music playlist',
+          type: ['playlist'],
+          limit: 8,
+          market: 'ES'
+        })
+        
+        if (fallbackData.playlists?.items) {
+          setPlaylists(fallbackData.playlists.items)
+        }
       }
     } catch (error) {
       console.error('Error cargando playlists:', error)
-      // Datos de respaldo
+      // Datos de respaldo si todo falla
       setPlaylists([
         {
           id: '1',

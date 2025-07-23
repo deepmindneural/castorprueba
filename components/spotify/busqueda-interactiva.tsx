@@ -228,7 +228,7 @@ export function BusquedaInteractiva() {
           >
             <FaSearch className="text-5xl text-blanco-suave/30 mx-auto mb-4" />
             <p className="text-xl text-blanco-suave">
-              No se encontraron resultados para "{busqueda}"
+              No se encontraron resultados para &quot;{busqueda}&quot;
             </p>
           </motion.div>
         ) : null}

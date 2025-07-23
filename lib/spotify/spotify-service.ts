@@ -126,14 +126,36 @@ export class SpotifyService {
     limit?: number
     offset?: number
   }) {
-    const searchParams = new URLSearchParams({
-      ...(params?.country && { country: params.country }),
-      ...(params?.locale && { locale: params.locale }),
-      ...(params?.timestamp && { timestamp: params.timestamp }),
-      ...(params?.limit && { limit: params.limit.toString() }),
-      ...(params?.offset && { offset: params.offset.toString() })
-    })
-    return this.request(`/browse/featured-playlists?${searchParams}`)
+    try {
+      // El endpoint featured-playlists ya no está disponible
+      // Usar playlists de categorías populares como alternativa
+      const categoriasPopulares = ['0JQ5DAqbMKFQ00XGBls6ym', '0JQ5DAqbMKFDXXwE9BDJAr', '0JQ5DAqbMKFEC4WFtoNRpw', '0JQ5DAqbMKFHOzuVTgTizF']
+      const categoriaAleatoria = categoriasPopulares[Math.floor(Math.random() * categoriasPopulares.length)]
+      
+      const searchParams = new URLSearchParams({
+        ...(params?.country && { country: params.country }),
+        ...(params?.limit && { limit: params.limit.toString() })
+      })
+      
+      const result = await this.request(`/browse/categories/${categoriaAleatoria}/playlists?${searchParams}`)
+      return { 
+        message: 'Playlists destacadas',
+        playlists: result.playlists || result 
+      }
+    } catch (error) {
+      // Si falla, buscar playlists populares
+      console.log('Usando búsqueda alternativa para playlists destacadas')
+      const searchResult = await this.buscar({
+        q: 'top 50 viral hits',
+        type: ['playlist'],
+        limit: params?.limit || 20,
+        market: params?.country || 'ES'
+      })
+      return { 
+        message: 'Playlists destacadas',
+        playlists: searchResult.playlists 
+      }
+    }
   }
 
   async obtenerCategorias(params?: {

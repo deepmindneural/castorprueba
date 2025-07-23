@@ -62,41 +62,26 @@ export function SeccionCategorias() {
   }, [])
 
   const cargarCategorias = async () => {
-    try {
-      const token = await obtenerTokenPublico()
-      const spotify = new SpotifyService(token)
-      const data = await spotify.obtenerCategorias({
-        country: 'ES',
-        limit: 16
-      })
-      
-      if (data.categories?.items) {
-        setCategorias(data.categories.items)
-      }
-    } catch (error) {
-      console.error('Error cargando categorías:', error)
-      // Categorías de respaldo
-      setCategorias([
-        { id: 'pop', name: 'Pop', href: '/categoria/pop' },
-        { id: 'rock', name: 'Rock', href: '/categoria/rock' },
-        { id: 'latin', name: 'Latino', href: '/categoria/latin' },
-        { id: 'hiphop', name: 'Hip Hop', href: '/categoria/hiphop' },
-        { id: 'electronic', name: 'Electrónica', href: '/categoria/electronic' },
-        { id: 'indie', name: 'Indie', href: '/categoria/indie' },
-        { id: 'jazz', name: 'Jazz', href: '/categoria/jazz' },
-        { id: 'classical', name: 'Clásica', href: '/categoria/classical' },
-        { id: 'metal', name: 'Metal', href: '/categoria/metal' },
-        { id: 'soul', name: 'Soul', href: '/categoria/soul' },
-        { id: 'country', name: 'Country', href: '/categoria/country' },
-        { id: 'dance', name: 'Dance', href: '/categoria/dance' },
-        { id: 'alternative', name: 'Alternativa', href: '/categoria/alternative' },
-        { id: 'rnb', name: 'R&B', href: '/categoria/rnb' },
-        { id: 'folk', name: 'Folk', href: '/categoria/folk' },
-        { id: 'romance', name: 'Romance', href: '/categoria/romance' }
-      ])
-    } finally {
-      setCargando(false)
-    }
+    // Como el endpoint de categorías no funciona, usar categorías predefinidas
+    setCategorias([
+      { id: 'pop', name: 'Pop', href: '/categoria/pop' },
+      { id: 'rock', name: 'Rock', href: '/categoria/rock' },
+      { id: 'latin', name: 'Latino', href: '/categoria/latin' },
+      { id: 'hiphop', name: 'Hip Hop', href: '/categoria/hiphop' },
+      { id: 'electronic', name: 'Electrónica', href: '/categoria/electronic' },
+      { id: 'indie', name: 'Indie', href: '/categoria/indie' },
+      { id: 'jazz', name: 'Jazz', href: '/categoria/jazz' },
+      { id: 'classical', name: 'Clásica', href: '/categoria/classical' },
+      { id: 'metal', name: 'Metal', href: '/categoria/metal' },
+      { id: 'soul', name: 'Soul', href: '/categoria/soul' },
+      { id: 'country', name: 'Country', href: '/categoria/country' },
+      { id: 'dance', name: 'Dance', href: '/categoria/dance' },
+      { id: 'alternative', name: 'Alternativa', href: '/categoria/alternative' },
+      { id: 'rnb', name: 'R&B', href: '/categoria/rnb' },
+      { id: 'folk', name: 'Folk', href: '/categoria/folk' },
+      { id: 'romance', name: 'Romance', href: '/categoria/romance' }
+    ])
+    setCargando(false)
   }
 
   const obtenerIcono = (nombreCategoria: string) => {

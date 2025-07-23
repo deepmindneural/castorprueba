@@ -3,7 +3,14 @@
 
 let tokenCache: { token: string; expiry: number } | null = null
 
+// Token hardcodeado mientras esté activo
+const HARDCODED_TOKEN = 'BQBbpeXG8Li_3BaqwjlSZgfQS-o96CTBYN4KoL6TS8jMQHGRcejQVFuH9U43L3Nnt_vNnNcb3Ussby53m3RcoGbX9yhWv86S5ztvPnfvKJcOm396OsE7DcrVAMLWYGW2Hw9CI4ZYY4tc9415G3SMn7fyinhDGZ6cYMZPMzXx9YufHKyb90LJYcK-nG4UDX__oUZM9MuOBhR2gzxsJwfKw2jbugbuxS0Jj7IJhhXpppix9UYGUPZUXpx7ogqiIeYHYd4DVBPaH3uBiLesJ_hBXJ8b4eAx4Rbq1Vujkl8UlItLWNx5VKsEX8r2n6cKL5ck'
+
 export async function obtenerTokenPublico(): Promise<string> {
+  // Por ahora usar token hardcodeado
+  return HARDCODED_TOKEN
+  
+  /* Código original para cuando tengamos autenticación configurada
   // Verificar si tenemos un token válido en caché
   if (tokenCache && tokenCache.expiry > Date.now()) {
     return tokenCache.token
@@ -33,6 +40,7 @@ export async function obtenerTokenPublico(): Promise<string> {
     console.error('Error obteniendo token público:', error)
     throw error
   }
+  */
 }
 
 export async function buscarPublico(

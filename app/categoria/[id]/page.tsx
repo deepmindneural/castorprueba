@@ -27,56 +27,50 @@ export default function PaginaCategoria() {
       const token = await obtenerTokenPublico()
       const spotify = new SpotifyService(token)
       
-      // Primero intentar obtener información de la categoría
-      try {
-        const catData = await spotify.obtenerCategoria(categoriaId, { country: 'ES' })
-        setCategoria(catData)
-      } catch (catError) {
-        console.log('No se pudo obtener info de categoría, usando valores por defecto')
-        setCategoria({
-          id: categoriaId,
-          name: obtenerNombreCategoria(categoriaId)
-        })
-      }
+      // Usar valores por defecto para la categoría ya que el endpoint no funciona
+      const nombreCategoria = obtenerNombreCategoria(categoriaId)
+      setCategoria({
+        id: categoriaId,
+        name: nombreCategoria
+      })
       
-      // Intentar obtener playlists
-      try {
-        const playlistsData = await spotify.obtenerPlaylistsCategoria(categoriaId, { 
-          country: 'ES',
-          limit: 20 
-        })
-        
-        if (playlistsData.playlists?.items) {
-          setPlaylists(playlistsData.playlists.items)
-        }
-      } catch (playlistError) {
-        console.log('Error obteniendo playlists, buscando alternativas')
-        // Buscar playlists relacionadas
-        const nombreCategoria = obtenerNombreCategoria(categoriaId)
-        const searchData = await spotify.buscar({
-          q: `${nombreCategoria} music playlist`,
+      // Buscar playlists relacionadas usando búsqueda que sí funciona
+      const searchData = await spotify.buscar({
+        q: `${nombreCategoria} playlist 2024`,
+        type: ['playlist'],
+        limit: 20,
+        market: 'ES'
+      })
+      
+      if (searchData.playlists?.items && searchData.playlists.items.length > 0) {
+        setPlaylists(searchData.playlists.items)
+      } else {
+        // Si no hay resultados, buscar con término más general
+        const generalSearch = await spotify.buscar({
+          q: `${nombreCategoria} music`,
           type: ['playlist'],
           limit: 20,
           market: 'ES'
         })
         
-        if (searchData.playlists?.items && searchData.playlists.items.length > 0) {
-          setPlaylists(searchData.playlists.items)
+        if (generalSearch.playlists?.items && generalSearch.playlists.items.length > 0) {
+          setPlaylists(generalSearch.playlists.items)
         } else {
-          // Si no hay resultados, buscar con término más general
-          const generalSearch = await spotify.buscar({
-            q: nombreCategoria,
+          // Buscar playlists populares como último recurso
+          const popularSearch = await spotify.buscar({
+            q: 'top 50',
             type: ['playlist'],
-            limit: 20
+            limit: 20,
+            market: 'ES'
           })
           
-          if (generalSearch.playlists?.items) {
-            setPlaylists(generalSearch.playlists.items)
+          if (popularSearch.playlists?.items) {
+            setPlaylists(popularSearch.playlists.items)
           }
         }
       }
     } catch (error) {
-      console.error('Error general:', error)
+      console.error('Error cargando categoría:', error)
       // Usar datos de respaldo
       setCategoria({
         id: categoriaId,
