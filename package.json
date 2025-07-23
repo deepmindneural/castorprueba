@@ -9,7 +9,9 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "postdeploy": "node scripts/deploy-hook.js",
+    "auto-setup": "bash scripts/auto-setup.sh"
   },
   "keywords": [],
   "author": "",
