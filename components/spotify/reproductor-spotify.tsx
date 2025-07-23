@@ -144,7 +144,7 @@ export function ReproductorSpotify() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               {/* Imagen del álbum */}
               <motion.div
-                animate={{ rotate: reproduciendo ? 360 : 0 }}
+                animate={{ rotate: isPlaying ? 360 : 0 }}
                 transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
                 className="relative aspect-square max-w-sm mx-auto w-full"
               >

@@ -10,6 +10,8 @@ En el panel de Coolify, ve a tu aplicación y agrega estas variables de entorno:
 SPOTIFY_CLIENT_ID=4a0842d5eaf240469ee4c20a022ce406
 SPOTIFY_CLIENT_SECRET=584bb857fa6f491792047d4660d37349
 NEXT_PUBLIC_APP_URL=https://neuralforze.com
+DATABASE_URL=postgres://postgres:fISwib48pzeW4EmCucWSQ6epbTBGDTCQAoUW7J3MxbfoegBQYoFYKtKsnpIVUhdD@zg8ks4o0ggg8wow44s4oc04o:5432/postgres
+JWT_SECRET=cambia_este_valor_por_uno_muy_seguro_en_produccion_123456789
 ```
 
 ## Opciones de configuración en Coolify:
