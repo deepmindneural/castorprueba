@@ -110,10 +110,8 @@ export default function PaginaCategoria() {
       // IDs de Spotify comunes
       '0jq5daqbmkfxaxkp7zcdp': 'Latino',
       'toplists': 'Top Listas',
-      'pop': 'Pop',
       'mood': 'Estado de ánimo',
       'decades': 'Décadas',
-      'country': 'Country',
       'focus': 'Concentración',
       'chill': 'Relajación'
     }

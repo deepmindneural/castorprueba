@@ -38,7 +38,7 @@ export function SeccionNuevosLanzamientos() {
       })
       
       if (data.albums?.items) {
-        setAlbums(data.albums.items.filter(album => album && album.id))
+        setAlbums(data.albums.items.filter((album: any) => album && album.id))
       }
     } catch (error) {
       console.error('Error cargando nuevos lanzamientos:', error)
