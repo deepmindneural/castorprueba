@@ -8,6 +8,7 @@ export default function AdminPage() {
   const [authStatus, setAuthStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [migrating, setMigrating] = useState(false)
+  const [autoFixing, setAutoFixing] = useState(false)
 
   useEffect(() => {
     checkDatabaseStatus()
@@ -57,6 +58,29 @@ export default function AdminPage() {
       alert(`Error: ${error}`)
     }
     setMigrating(false)
+  }
+
+  const runAutoFix = async () => {
+    setAutoFixing(true)
+    try {
+      const response = await fetch('/api/auto-fix', {
+        method: 'POST'
+      })
+      const result = await response.json()
+      
+      if (result.success) {
+        alert('Auto-fix completado exitosamente')
+        checkDatabaseStatus()
+        checkAuthStatus()
+      } else {
+        alert(`Problemas encontrados: ${result.errors?.join(', ')}`)
+      }
+      
+      console.log('Auto-fix resultado:', result)
+    } catch (error) {
+      alert(`Error: ${error}`)
+    }
+    setAutoFixing(false)
   }
 
   if (loading) {
@@ -170,7 +194,15 @@ export default function AdminPage() {
             Enlaces de Prueba
           </h2>
           
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <button
+              onClick={runAutoFix}
+              disabled={autoFixing}
+              className="bg-blue-600 hover:bg-blue-700 text-blanco-puro font-semibold py-2 px-4 rounded-lg transition-colors text-center disabled:opacity-50"
+            >
+              {autoFixing ? 'Reparando...' : '🔧 Auto-Fix'}
+            </button>
+            
             <a
               href="/api/health/db"
               target="_blank"
