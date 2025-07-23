@@ -6,17 +6,19 @@ import { FaPlay, FaPause, FaStepForward, FaStepBackward, FaVolumeUp, FaRandom, F
 import Image from 'next/image'
 import { SpotifyService } from '@/lib/spotify/spotify-service'
 import { obtenerTokenPublico } from '@/lib/spotify/spotify-public'
+import { useSpotifyPreview } from '@/hooks/useSpotifyPreview'
 
 export function ReproductorSpotify() {
-  const [reproduciendo, setReproduciendo] = useState(false)
-  const [progreso, setProgreso] = useState(0)
   const [volumen, setVolumen] = useState(70)
   const [aleatorio, setAleatorio] = useState(false)
   const [repetir, setRepetir] = useState(false)
   const [cancionActual, setCancionActual] = useState<any>(null)
   const [cargando, setCargando] = useState(true)
-  const [errorAudio, setErrorAudio] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  
+  const { isPlaying, isLoading, error, progress, toggle, audioRef } = useSpotifyPreview({
+    previewUrl: cancionActual?.preview_url || null,
+    useProxy: true
+  })
 
   useEffect(() => {
     cargarCancionPopular()
@@ -45,13 +47,7 @@ export function ReproductorSpotify() {
           spotify_url: track.external_urls.spotify
         })
         
-        if (track.preview_url && audioRef.current) {
-          audioRef.current.src = track.preview_url
-          audioRef.current.load()
-          setErrorAudio(false)
-        } else {
-          setErrorAudio(true)
-        }
+        // El hook manejará la carga del audio
       }
     } catch (error) {
       console.error('Error cargando canción:', error)
@@ -67,10 +63,7 @@ export function ReproductorSpotify() {
         spotify_url: null
       })
       
-      if (audioRef.current) {
-        audioRef.current.src = 'https://p.scdn.co/mp3-preview/4839b070015ab7d6de9fec1756e1f3096d908fba'
-        audioRef.current.load()
-      }
+      // El hook manejará la carga del audio con el preview_url
     } finally {
       setCargando(false)
     }
@@ -79,55 +72,19 @@ export function ReproductorSpotify() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volumen / 100
-      
-      const updateProgress = () => {
-        if (audioRef.current && audioRef.current.duration) {
-          const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100
-          setProgreso(progress)
-        }
-      }
-      
-      audioRef.current.addEventListener('timeupdate', updateProgress)
-      audioRef.current.addEventListener('ended', () => {
-        setReproduciendo(false)
-        setProgreso(0)
-        if (repetir && audioRef.current) {
-          audioRef.current.currentTime = 0
-          audioRef.current.play()
-          setReproduciendo(true)
-        }
-      })
-      
-      audioRef.current.addEventListener('error', (e) => {
-        console.error('Error de audio:', e)
-        setErrorAudio(true)
-        setReproduciendo(false)
-      })
-      
-      return () => {
-        if (audioRef.current) {
-          audioRef.current.removeEventListener('timeupdate', updateProgress)
-        }
-      }
     }
-  }, [volumen])
+  }, [volumen, audioRef])
+  
+  useEffect(() => {
+    if (audioRef.current && repetir && !isPlaying && progress === 100) {
+      audioRef.current.currentTime = 0
+      toggle()
+    }
+  }, [isPlaying, progress, repetir, toggle, audioRef])
 
-  const toggleReproduccion = async () => {
-    if (audioRef.current && cancionActual?.preview_url) {
-      try {
-        if (reproduciendo) {
-          audioRef.current.pause()
-          setReproduciendo(false)
-        } else {
-          await audioRef.current.play()
-          setReproduciendo(true)
-          setErrorAudio(false)
-        }
-      } catch (error) {
-        console.error('Error al reproducir:', error)
-        setErrorAudio(true)
-        setReproduciendo(false)
-      }
+  const handleTogglePlay = async () => {
+    if (cancionActual?.preview_url) {
+      await toggle()
     }
   }
 
@@ -139,7 +96,6 @@ export function ReproductorSpotify() {
 
   const manejarProgreso = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nuevoProgreso = Number(e.target.value)
-    setProgreso(nuevoProgreso)
     
     if (audioRef.current && audioRef.current.duration) {
       audioRef.current.currentTime = (nuevoProgreso / 100) * audioRef.current.duration
@@ -161,7 +117,7 @@ export function ReproductorSpotify() {
 
   return (
     <section className="py-20 bg-gradient-to-b from-negro-medio/50 to-negro-puro">
-      <audio ref={audioRef} />
+      {/* El audio es manejado por el hook useSpotifyPreview */}
       
       <div className="container mx-auto px-4">
         <motion.div
@@ -201,7 +157,7 @@ export function ReproductorSpotify() {
                     className="object-cover"
                   />
                 </div>
-                {reproduciendo && (
+                {isPlaying && (
                   <motion.div
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 2, repeat: Infinity }}
@@ -227,20 +183,20 @@ export function ReproductorSpotify() {
                   <div className="relative h-2 bg-negro-claro rounded-full overflow-hidden">
                     <motion.div
                       className="absolute inset-y-0 left-0 gradient-spotify"
-                      style={{ width: `${progreso}%` }}
+                      style={{ width: `${progress}%` }}
                       transition={{ duration: 0.1 }}
                     />
                     <input
                       type="range"
                       min="0"
                       max="100"
-                      value={progreso}
+                      value={progress}
                       onChange={manejarProgreso}
                       className="absolute inset-0 w-full opacity-0 cursor-pointer"
                     />
                   </div>
                   <div className="flex justify-between text-xs text-blanco-suave/60">
-                    <span>{formatearTiempo((progreso / 100) * (cancionActual?.duracionTotal || 0))}</span>
+                    <span>{formatearTiempo((progress / 100) * (cancionActual?.duracionTotal || 0))}</span>
                     <span>{formatearTiempo(cancionActual?.duracionTotal || 0)}</span>
                   </div>
                 </div>
@@ -261,15 +217,17 @@ export function ReproductorSpotify() {
                   </button>
 
                   <button
-                    onClick={toggleReproduccion}
+                    onClick={handleTogglePlay}
                     className={`p-3 sm:p-4 rounded-full hover-scale shadow-lg ${
-                      !cancionActual?.preview_url || errorAudio
+                      !cancionActual?.preview_url || error || isLoading
                         ? 'bg-gris-oscuro cursor-not-allowed opacity-50'
                         : 'gradient-spotify'
                     }`}
-                    disabled={!cancionActual?.preview_url || errorAudio}
+                    disabled={!cancionActual?.preview_url || !!error || isLoading}
                   >
-                    {reproduciendo ? (
+                    {isLoading ? (
+                      <div className="w-6 h-6 border-2 border-blanco-puro/30 border-t-blanco-puro rounded-full animate-spin" />
+                    ) : isPlaying ? (
                       <FaPause className="text-xl sm:text-2xl text-blanco-puro" />
                     ) : (
                       <FaPlay className="text-xl sm:text-2xl text-blanco-puro ml-1" />
@@ -312,9 +270,9 @@ export function ReproductorSpotify() {
 
                 {/* Información adicional */}
                 <div className="pt-4 text-center md:text-left">
-                  {errorAudio ? (
+                  {error ? (
                     <p className="text-xs text-red-400">
-                      Error al cargar el audio. Intenta con otra canción.
+                      {error}
                     </p>
                   ) : cancionActual?.preview_url ? (
                     <p className="text-xs text-blanco-suave/60">
