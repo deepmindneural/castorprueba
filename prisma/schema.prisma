@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuario con información extendida
+model Usuario {
+  id                   String              @id @default(cuid())
+  email                String              @unique
+  nombre               String
+  apellido             String?
+  nombreUsuario        String              @unique
+  contrasenaHash       String
+  imagenPerfil         String?
+  fechaNacimiento      DateTime?
+  pais                 String?
+  
+  // Preferencias musicales y datos de IA
+  generosFavoritos     String[]            @default([])
+  artistasFavoritos    String[]            @default([])
+  embedingMusical      Float[]             @default([]) // Vector para recomendaciones IA
+  
+  // Integración con Spotify
+  spotifyId            String?             @unique
+  spotifyAccessToken   String?
+  spotifyRefreshToken  String?
+  spotifyTokenExpiry   DateTime?
+  
+  // Estadísticas
+  totalCancionesEscuchadas Int            @default(0)
+  tiempoTotalEscuchado     Int            @default(0) // En segundos
+  
+  // Relaciones
+  sesiones             Sesion[]
+  historialBusquedas   HistorialBusqueda[]
+  cancionesFavoritas   CancionFavorita[]
+  playlists            Playlist[]
+  estadisticasDiarias  EstadisticaDiaria[]
+  recomendaciones      Recomendacion[]
+  
+  // Timestamps
+  creadoEn             DateTime            @default(now())
+  actualizadoEn        DateTime            @updatedAt
+  ultimoAcceso         DateTime?
+  
+  @@index([email])
+  @@index([nombreUsuario])
+}
+
+// Sesiones de usuario para autenticación
+model Sesion {
+  id              String    @id @default(cuid())
+  tokenSesion     String    @unique
+  usuarioId       String
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiraEn        DateTime
+  dispositivoInfo String?
+  ipAddress       String?
+  creadoEn        DateTime  @default(now())
+  
+  @@index([tokenSesion])
+  @@index([usuarioId])
+}
+
+// Historial de búsquedas del usuario
+model HistorialBusqueda {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  consulta    String
+  tipo        TipoBusqueda
+  resultados  Int       @default(0)
+  creadoEn    DateTime  @default(now())
+  
+  @@index([usuarioId, creadoEn])
+}
+
+// Canciones favoritas con metadata de Spotify
+model CancionFavorita {
+  id                String    @id @default(cuid())
+  usuarioId         String
+  usuario           Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  spotifyTrackId    String
+  nombre            String
+  artista           String
+  album             String?
+  duracionMs        Int
+  popularidad       Int?
+  caracteristicas   Json?     // Audio features de Spotify
+  agregadoEn        DateTime  @default(now())
+  vecesReproducida  Int       @default(0)
+  
+  @@unique([usuarioId, spotifyTrackId])
+  @@index([usuarioId, agregadoEn])
+}
+
+// Playlists personalizadas
+model Playlist {
+  id              String    @id @default(cuid())
+  usuarioId       String
+  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  nombre          String
+  descripcion     String?
+  imagenPortada   String?
+  esPublica       Boolean   @default(false)
+  esGeneradaPorIA Boolean   @default(false)
+  canciones       Json      @default("[]")
+  totalCanciones  Int       @default(0)
+  duracionTotalMs Int       @default(0)
+  creadoEn        DateTime  @default(now())
+  actualizadoEn   DateTime  @updatedAt
+  
+  @@index([usuarioId])
+}
+
+// Estadísticas diarias de escucha
+model EstadisticaDiaria {
+  id                    String    @id @default(cuid())
+  usuarioId             String
+  usuario               Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  fecha                 DateTime  @db.Date
+  minutosEscuchados     Int       @default(0)
+  cancionesEscuchadas   Int       @default(0)
+  generosEscuchados     Json      @default("{}")
+  artistasEscuchados    Json      @default("{}")
+  horasPico             Json      @default("[]")
+  dispositivosUsados    String[]  @default([])
+  
+  @@unique([usuarioId, fecha])
+  @@index([usuarioId, fecha])
+}
+
+// Recomendaciones generadas por IA
+model Recomendacion {
+  id                String              @id @default(cuid())
+  usuarioId         String
+  usuario           Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tipo              TipoRecomendacion
+  algoritmoUsado    String
+  canciones         Json                @default("[]")
+  puntuacionIA      Float
+  razonamiento      String?             // Explicación de por qué se recomendó
+  fueAceptada       Boolean?
+  feedback          String?
+  creadoEn          DateTime            @default(now())
+  
+  @@index([usuarioId, creadoEn])
+}
+
+// Enums
+enum TipoBusqueda {
+  CANCION
+  ARTISTA
+  ALBUM
+  PLAYLIST
+  GENERO
+}
+
+enum TipoRecomendacion {
+  DIARIA
+  SEMANAL
+  BASADA_EN_CANCION
+  BASADA_EN_ARTISTA
+  BASADA_EN_GENERO
+  DESCUBRIMIENTO
+  SIMILAR_A_FAVORITOS
+}
